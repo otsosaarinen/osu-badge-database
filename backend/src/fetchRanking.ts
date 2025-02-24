@@ -3,12 +3,12 @@ dotenv.config();
 
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN as string;
 
-const fetchRanking = async (country: string, page: string) => {
+const fetchRanking = async (page: string) => {
     const rankingsURL = new URL(
         "https://osu.ppy.sh/api/v2/rankings/osu/performance"
     );
-    if (country || page) {
-        const parameters: { [key: string]: string } = { country, page };
+    if (page) {
+        const parameters: { [key: string]: string } = { page };
         Object.keys(parameters).forEach((key) =>
             rankingsURL.searchParams.append(key, parameters[key])
         );
@@ -38,6 +38,6 @@ const fetchRanking = async (country: string, page: string) => {
     }
 };
 
-fetchRanking("FI", "2").then((rankingdata) => {
+fetchRanking("2").then((rankingdata) => {
     console.log(rankingdata);
 });
