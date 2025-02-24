@@ -36,6 +36,15 @@ db.serialize(() => {
     `);
 });
 
+let playerArray: string[] = [];
+
+fetchRanking("1").then((data) => {
+    const fetchedArray = data.ranking;
+    fetchedArray.forEach((user: { username: string }) => {
+        playerArray.push(user.username);
+    });
+});
+
 const insertPlayersToDb = (playerList: OsuPlayer): Promise<void> => {
     return new Promise((resolve) => {
         db.get(
