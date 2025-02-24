@@ -14,7 +14,7 @@ interface OsuPlayer {
     country: string;
 }
 
-const db = new sqlite3.Database("./backend/db/badges.db", (err) => {
+const db = new sqlite3.Database("./db/badgedata.db", (err) => {
     if (err) {
         console.error("Error connecting to database");
         console.log(err);
@@ -35,7 +35,7 @@ db.serialize(() => {
         )
     `);
 });
-
+/*
 let playerArray: string[] = [];
 
 fetchRanking("1").then((data) => {
@@ -44,7 +44,7 @@ fetchRanking("1").then((data) => {
         playerArray.push(user.username);
     });
 });
-
+*/
 const insertPlayersToDb = (playerList: OsuPlayer): Promise<void> => {
     return new Promise((resolve) => {
         db.get(
