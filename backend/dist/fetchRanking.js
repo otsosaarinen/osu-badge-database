@@ -1,8 +1,17 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 import dotenv from "dotenv";
 dotenv.config();
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
-const rankingsURL = new URL("https://osu.ppy.sh/api/v2/rankings/osu/performance");
-const fetchRanking = (country, page) => {
+const fetchRanking = (country, page) => __awaiter(void 0, void 0, void 0, function* () {
+    const rankingsURL = new URL("https://osu.ppy.sh/api/v2/rankings/osu/performance");
     if (country || page) {
         const parameters = { country, page };
         Object.keys(parameters).forEach((key) => rankingsURL.searchParams.append(key, parameters[key]));
@@ -10,24 +19,26 @@ const fetchRanking = (country, page) => {
     else {
         console.error("Error with parameters");
     }
-    fetch(rankingsURL, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${ACCESS_TOKEN}`,
-        },
-    })
-        .then((response) => response.json())
-        .then((data) => {
-        console.log(data.ranking);
-        console.log(data.cursor);
-        console.log(rankingsURL);
-    });
-    /*.then((data: Ranking) => {
-            data.ranking.forEach((ranking) => {
-                console.log(ranking.user);
-            });
-        });*/
-};
-fetchRanking("FI", "2");
+    try {
+        const response = yield fetch(rankingsURL, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+                Authorization: `Bearer ${ACCESS_TOKEN}`,
+            },
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = yield response.json();
+        return data;
+    }
+    catch (error) {
+        console.error("Error fetching ranking: ", error);
+        return null;
+    }
+});
+fetchRanking("FI", "2").then((rankingdata) => {
+    console.log(rankingdata);
+});
