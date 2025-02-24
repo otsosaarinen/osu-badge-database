@@ -32,7 +32,7 @@ interface User {
 }
 
 interface Ranking {
-    cursor: {};
+    cursor: string | null;
     ranking: {
         grade_counts: {
             a: number;
@@ -61,12 +61,14 @@ interface Ranking {
     total: number;
 }
 
-const fetchRanking = (country?: string) => {
-    if (country) {
-        const parameters: { [key: string]: string } = { country };
+const fetchRanking = (country: string, cursor: string) => {
+    if (country && cursor) {
+        const parameters: { [key: string]: string } = { country, cursor };
         Object.keys(parameters).forEach((key) =>
             rankingsURL.searchParams.append(key, parameters[key])
         );
+    } else {
+        console.error("Error with parameters");
     }
 
     fetch(rankingsURL, {
@@ -78,7 +80,10 @@ const fetchRanking = (country?: string) => {
         },
     })
         .then((response) => response.json())
-        .then((data) => console.log(data.ranking));
+        .then((data) => {
+            console.log(data.ranking);
+            console.log(data.cursor);
+        });
     /*.then((data: Ranking) => {
             data.ranking.forEach((ranking) => {
                 console.log(ranking.user);
@@ -86,4 +91,4 @@ const fetchRanking = (country?: string) => {
         });*/
 };
 
-fetchRanking();
+fetchRanking("FI", "2");
