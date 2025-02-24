@@ -68,6 +68,7 @@ const fetchRanking = (page) =>
             return null;
         }
     });
+
 fetchRanking("2").then((rankingdata) => {
-    console.log(rankingdata);
+    console.log(rankingdata.ranking[0].user);
 });
