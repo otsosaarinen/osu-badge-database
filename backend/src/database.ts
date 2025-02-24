@@ -7,7 +7,7 @@ dotenv.config();
 interface OsuPlayer {
     user_id: number;
     username: string;
-    badges: number;
+    badges: number | null;
     rank: number;
     pp: number;
     country: string;
@@ -36,10 +36,31 @@ db.serialize(() => {
 });
 
 fetchRanking("1").then((data) => {
-    const playerArray: string[] = [];
-    data.ranking.forEach((rankEntry: { user: { username: string } }) => {
-        playerArray.push(rankEntry.user.username);
-    });
+    const playerArray: OsuPlayer[] = [];
+    data.ranking.forEach(
+        (rankEntry: {
+            global_rank: number;
+            pp: number;
+            user: {
+                id: number;
+                username: string;
+                badges: null;
+                global_rank: number;
+                pp: number;
+                country_code: string;
+            };
+        }) => {
+            const player: OsuPlayer = {
+                user_id: rankEntry.user.id,
+                username: rankEntry.user.username,
+                badges: null,
+                rank: rankEntry.global_rank,
+                pp: rankEntry.pp,
+                country: rankEntry.user.country_code,
+            };
+            playerArray.push(player);
+        }
+    );
     console.log(playerArray);
 });
 
