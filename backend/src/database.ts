@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 import sqlite3 from "sqlite3";
-import fetchUser from "./fetchUser";
-import fetchRanking from "./fetchRanking";
+import { fetchRanking } from "./fetchRanking.js";
 
 dotenv.config();
 
@@ -35,16 +34,15 @@ db.serialize(() => {
         )
     `);
 });
-/*
-let playerArray: string[] = [];
 
 fetchRanking("1").then((data) => {
-    const fetchedArray = data.ranking;
-    fetchedArray.forEach((user: { username: string }) => {
-        playerArray.push(user.username);
+    const playerArray: string[] = [];
+    data.ranking.forEach((rankEntry: { user: { username: string } }) => {
+        playerArray.push(rankEntry.user.username);
     });
+    console.log(playerArray);
 });
-*/
+
 const insertPlayersToDb = (playerList: OsuPlayer): Promise<void> => {
     return new Promise((resolve) => {
         db.get(

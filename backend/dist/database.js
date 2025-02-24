@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import sqlite3 from "sqlite3";
+import { fetchRanking } from "./fetchRanking.js";
 dotenv.config();
 const db = new sqlite3.Database("./db/badgedata.db", (err) => {
     if (err) {
@@ -22,16 +23,13 @@ db.serialize(() => {
         )
     `);
 });
-/*
-let playerArray: string[] = [];
-
 fetchRanking("1").then((data) => {
-    const fetchedArray = data.ranking;
-    fetchedArray.forEach((user: { username: string }) => {
-        playerArray.push(user.username);
+    const playerArray = [];
+    data.ranking.forEach((rankEntry) => {
+        playerArray.push(rankEntry.user.username);
     });
+    console.log(playerArray);
 });
-*/
 const insertPlayersToDb = (playerList) => {
     return new Promise((resolve) => {
         db.get("SELECT * FROM osu_players WHERE user_id = ?", [playerList.user_id], (err, row) => {
