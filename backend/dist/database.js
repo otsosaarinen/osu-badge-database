@@ -1,4 +1,7 @@
+import dotenv from "dotenv";
 import sqlite3 from "sqlite3";
+import fetchRanking from "./fetchRanking";
+dotenv.config();
 const db = new sqlite3.Database("./backend/db/badges.db", (err) => {
     if (err) {
         console.error("Error connecting to database");
@@ -19,6 +22,13 @@ db.serialize(() => {
         country STRING
         )
     `);
+});
+let playerArray = [];
+fetchRanking("1").then((data) => {
+    const fetchedArray = data.ranking;
+    fetchedArray.forEach((user) => {
+        playerArray.push(user.username);
+    });
 });
 const insertPlayersToDb = (playerList) => {
     return new Promise((resolve) => {
