@@ -9,7 +9,7 @@ const db = new sqlite3.Database("./backend/db/badges.db", (err) => {
     }
 });
 db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS badges (
+    db.run(`CREATE TABLE IF NOT EXISTS osu_players (
         ID INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL UNIQUE,
         username STRING NOT NULL,
@@ -20,3 +20,35 @@ db.serialize(() => {
         )
     `);
 });
+const insertPlayersToDb = (playerList) => {
+    return new Promise((resolve) => {
+        db.get("SELECT * FROM osu_players WHERE user_id = ?", [playerList.user_id], (err, row) => {
+            if (err) {
+                console.error("Error checking existing players: ", err);
+                resolve();
+                return;
+            }
+            if (row) {
+                console.log(`Player with user_id ${playerList.user_id} already exists, skipping insertion.`);
+                resolve();
+            }
+            else {
+                db.run("INSERT INTO osu_players (user_id, username, rank, pp, country) VALUES (?, ?, ?, ?, ?)", [
+                    playerList.user_id,
+                    playerList.username,
+                    playerList.rank,
+                    playerList.pp,
+                    playerList.country,
+                ], (insertErr) => {
+                    if (insertErr) {
+                        console.error("Error inserting player: ", insertErr);
+                    }
+                    else {
+                        console.log(`Inserted player ${playerList.username}(user_id: ${playerList.user_id}) `);
+                    }
+                    resolve();
+                });
+            }
+        });
+    });
+};
