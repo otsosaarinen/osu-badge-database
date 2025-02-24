@@ -32,7 +32,7 @@ interface User {
 }
 
 interface Ranking {
-    cursor: string | null;
+    cursor: {};
     ranking: {
         grade_counts: {
             a: number;
