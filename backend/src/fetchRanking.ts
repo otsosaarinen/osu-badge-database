@@ -61,9 +61,9 @@ interface Ranking {
     total: number;
 }
 
-const fetchRanking = (country: string, cursor: string) => {
-    if (country && cursor) {
-        const parameters: { [key: string]: string } = { country, cursor };
+const fetchRanking = (country: string, page: string) => {
+    if (country || page) {
+        const parameters: { [key: string]: string } = { country, page };
         Object.keys(parameters).forEach((key) =>
             rankingsURL.searchParams.append(key, parameters[key])
         );
@@ -83,6 +83,7 @@ const fetchRanking = (country: string, cursor: string) => {
         .then((data) => {
             console.log(data.ranking);
             console.log(data.cursor);
+            console.log(rankingsURL);
         });
     /*.then((data: Ranking) => {
             data.ranking.forEach((ranking) => {
