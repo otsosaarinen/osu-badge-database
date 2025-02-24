@@ -28,6 +28,4 @@ const fetchUser = async (username: string) => {
     }
 };
 
-fetchUser("MALISZEWSKI").then((userdata) => {
-    console.log(userdata);
-});
+export default fetchUser;

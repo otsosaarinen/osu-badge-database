@@ -50,10 +50,11 @@ const insertPlayersToDb = (playerList: OsuPlayer): Promise<void> => {
                     resolve();
                 } else {
                     db.run(
-                        "INSERT INTO osu_players (user_id, username, rank, pp, country) VALUES (?, ?, ?, ?, ?)",
+                        "INSERT INTO osu_players (user_id, username, badges, rank, pp, country) VALUES (?, ?, ?, ?, ?)",
                         [
                             playerList.user_id,
                             playerList.username,
+                            playerList.badges,
                             playerList.rank,
                             playerList.pp,
                             playerList.country,

@@ -39,6 +39,4 @@ const fetchRanking = (page) => __awaiter(void 0, void 0, void 0, function* () {
         return null;
     }
 });
-fetchRanking("2").then((rankingdata) => {
-    console.log(rankingdata);
-});
+export default fetchRanking;

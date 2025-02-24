@@ -32,6 +32,4 @@ const fetchUser = (username) => __awaiter(void 0, void 0, void 0, function* () {
         return null;
     }
 });
-fetchUser("MALISZEWSKI").then((userdata) => {
-    console.log(userdata);
-});
+export default fetchUser;

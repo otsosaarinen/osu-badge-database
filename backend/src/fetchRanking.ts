@@ -38,6 +38,4 @@ const fetchRanking = async (page: string) => {
     }
 };
 
-fetchRanking("2").then((rankingdata) => {
-    console.log(rankingdata);
-});
+export default fetchRanking;

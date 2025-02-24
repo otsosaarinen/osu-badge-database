@@ -33,9 +33,10 @@ const insertPlayersToDb = (playerList) => {
                 resolve();
             }
             else {
-                db.run("INSERT INTO osu_players (user_id, username, rank, pp, country) VALUES (?, ?, ?, ?, ?)", [
+                db.run("INSERT INTO osu_players (user_id, username, badges, rank, pp, country) VALUES (?, ?, ?, ?, ?)", [
                     playerList.user_id,
                     playerList.username,
+                    playerList.badges,
                     playerList.rank,
                     playerList.pp,
                     playerList.country,
