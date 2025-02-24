@@ -1,4 +1,9 @@
+import dotenv from "dotenv";
 import sqlite3 from "sqlite3";
+import fetchUser from "./fetchUser";
+import fetchRanking from "./fetchRanking";
+
+dotenv.config();
 
 interface OsuPlayer {
     user_id: number;
