@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import dotenv from "dotenv";
 dotenv.config();
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
-const fetchRanking = (page) => __awaiter(void 0, void 0, void 0, function* () {
+export const fetchRanking = (page) => __awaiter(void 0, void 0, void 0, function* () {
     const rankingsURL = new URL("https://osu.ppy.sh/api/v2/rankings/osu/performance");
     if (page) {
         const parameters = { page };
@@ -39,4 +39,3 @@ const fetchRanking = (page) => __awaiter(void 0, void 0, void 0, function* () {
         return null;
     }
 });
-export default fetchRanking;

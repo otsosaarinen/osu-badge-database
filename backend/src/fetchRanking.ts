@@ -3,7 +3,7 @@ dotenv.config();
 
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN as string;
 
-const fetchRanking = async (page: string) => {
+export const fetchRanking = async (page: string) => {
     const rankingsURL = new URL(
         "https://osu.ppy.sh/api/v2/rankings/osu/performance"
     );
@@ -37,5 +37,3 @@ const fetchRanking = async (page: string) => {
         return null;
     }
 };
-
-export default fetchRanking;
