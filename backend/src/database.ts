@@ -45,17 +45,15 @@ fetchRanking("1").then((data) => {
                 id: number;
                 username: string;
                 badges: null;
-                global_rank: number;
-                pp: number;
                 country_code: string;
             };
         }) => {
             const player: OsuPlayer = {
                 user_id: rankEntry.user.id,
                 username: rankEntry.user.username,
-                badges: null,
                 rank: rankEntry.global_rank,
                 pp: rankEntry.pp,
+                badges: null,
                 country: rankEntry.user.country_code,
             };
             playerArray.push(player);
