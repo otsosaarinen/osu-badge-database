@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import sqlite3 from "sqlite3";
 import { fetchRanking } from "./fetchRanking.js";
+import { fetchUser } from "./fetchUser.js";
 
 dotenv.config();
 
@@ -35,32 +36,42 @@ db.serialize(() => {
     `);
 });
 
-fetchRanking("1").then((data) => {
-    const playerArray: OsuPlayer[] = [];
-    data.ranking.forEach(
-        (rankEntry: {
-            global_rank: number;
-            pp: number;
-            user: {
-                id: number;
-                username: string;
-                badges: null;
-                country_code: string;
-            };
-        }) => {
-            const player: OsuPlayer = {
-                user_id: rankEntry.user.id,
-                username: rankEntry.user.username,
-                rank: rankEntry.global_rank,
-                pp: rankEntry.pp,
-                badges: null,
-                country: rankEntry.user.country_code,
-            };
-            playerArray.push(player);
-        }
-    );
-    console.log(playerArray);
-});
+async function processPlayers(page_number: string) {
+    try {
+        console.log(`Fetching ranking data for page ${page_number}...`);
+        const data = await fetchRanking(page_number);
+        const playerArray: OsuPlayer[] = data.ranking.map((rankEntry: any) => ({
+            user_id: rankEntry.user.id,
+            username: rankEntry.user.username,
+            rank: rankEntry.global_rank,
+            pp: rankEntry.pp,
+            badges: null, // Will update later
+            country: rankEntry.user.country_code,
+        }));
+
+        console.log("Fetched ranking data:", playerArray);
+
+        // Fetch user data in parallel for better performance
+        const badgePromises = playerArray.map(async (player) => {
+            try {
+                const userData = await fetchUser(player.username); // Use username as intended
+                player.badges = userData.badges ? userData.badges.length : 0;
+            } catch (error) {
+                console.log(`Error fetching user ${player.username}:`, error);
+                player.badges = 0; // Default to 0 on failure
+            }
+        });
+
+        // Wait for all badge updates to complete
+        await Promise.all(badgePromises);
+
+        console.log("Updated players with badge counts:", playerArray);
+    } catch (error) {
+        console.error("Error in processPlayers:", error);
+    }
+}
+
+processPlayers("1");
 
 const insertPlayersToDb = (playerList: OsuPlayer): Promise<void> => {
     return new Promise((resolve) => {
@@ -85,9 +96,9 @@ const insertPlayersToDb = (playerList: OsuPlayer): Promise<void> => {
                         [
                             playerList.user_id,
                             playerList.username,
-                            playerList.badges,
                             playerList.rank,
                             playerList.pp,
+                            playerList.badges,
                             playerList.country,
                         ],
                         (insertErr) => {
