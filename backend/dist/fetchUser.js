@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import dotenv from "dotenv";
 dotenv.config();
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
-const fetchUser = (username) => __awaiter(void 0, void 0, void 0, function* () {
+export const fetchUser = (username) => __awaiter(void 0, void 0, void 0, function* () {
     const userURL = new URL(`https://osu.ppy.sh/api/v2/users/${username}/osu`);
     try {
         const response = yield fetch(userURL, {
@@ -32,4 +32,3 @@ const fetchUser = (username) => __awaiter(void 0, void 0, void 0, function* () {
         return null;
     }
 });
-export default fetchUser;
