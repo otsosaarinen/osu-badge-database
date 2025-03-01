@@ -3,7 +3,7 @@ dotenv.config();
 
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN as string;
 
-const fetchUser = async (username: string) => {
+export const fetchUser = async (username: string) => {
     const userURL = new URL(`https://osu.ppy.sh/api/v2/users/${username}/osu`);
 
     try {
@@ -27,5 +27,3 @@ const fetchUser = async (username: string) => {
         return null;
     }
 };
-
-export default fetchUser;
