@@ -12,12 +12,15 @@ const db = new sqlite3.Database("./db/badgedata.db", (err) => {
     }
 });
 
-db.all("SELECT * FROM osu_players", [], (err, row) => {
+db.all("SELECT * FROM osu_players", [], (err, rows) => {
     if (err) {
         console.log("Errow executing query: ", err);
+        return;
     }
 
-    if (row) {
-        console.log(row);
+    if (rows.length > 0) {
+        console.table(rows);
+    } else {
+        console.log("No data found");
     }
 });
