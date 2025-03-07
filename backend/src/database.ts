@@ -8,10 +8,10 @@ dotenv.config();
 interface OsuPlayer {
     user_id: number;
     username: string;
-    badges: number | null;
-    rank: number;
     pp: number;
+    rank: number;
     country: string;
+    badges: number | null;
 }
 
 const db = new sqlite3.Database("./db/badgedata.db", (err) => {
@@ -28,10 +28,10 @@ db.serialize(() => {
         ID INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL UNIQUE,
         username STRING NOT NULL,
-        badges INTEGER,
-        rank INTEGER,
         pp REAL,
-        country STRING
+        rank INTEGER,
+        country STRING,
+        badges INTEGER
         )
     `);
 });
@@ -43,18 +43,21 @@ async function processPlayers(page_number: string) {
         const playerArray: OsuPlayer[] = data.ranking.map((rankEntry: any) => ({
             user_id: rankEntry.user.id,
             username: rankEntry.user.username,
-            rank: rankEntry.global_rank,
             pp: rankEntry.pp,
-            badges: null, // Will update later
+            rank: rankEntry.global_rank,
             country: rankEntry.user.country_code,
+            badges: null,
         }));
 
-        console.log("Fetched ranking data:", playerArray);
+        console.log(
+            `Fetched ranking data for page ${page_number}: `,
+            playerArray
+        );
 
         // Fetch user data in parallel for better performance
         const badgePromises = playerArray.map(async (player) => {
             try {
-                const userData = await fetchUser(player.username); // Use username as intended
+                const userData = await fetchUser(player.username);
                 player.badges = userData.badges ? userData.badges.length : 0;
             } catch (error) {
                 console.log(`Error fetching user ${player.username}:`, error);
@@ -92,14 +95,14 @@ const insertPlayersToDb = (playerList: OsuPlayer): Promise<void> => {
                     resolve();
                 } else {
                     db.run(
-                        "INSERT INTO osu_players (user_id, username, badges, rank, pp, country) VALUES (?, ?, ?, ?, ?)",
+                        "INSERT INTO osu_players (user_id, username, pp, rank, country, badges) VALUES (?, ?, ?, ?, ?, ?)",
                         [
                             playerList.user_id,
                             playerList.username,
-                            playerList.rank,
                             playerList.pp,
-                            playerList.badges,
+                            playerList.rank,
                             playerList.country,
+                            playerList.badges,
                         ],
                         (insertErr) => {
                             if (insertErr) {
