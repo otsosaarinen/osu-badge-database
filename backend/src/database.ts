@@ -40,6 +40,7 @@ async function processPlayers(page_number: string) {
     try {
         console.log(`Fetching ranking data for page ${page_number}...`);
         const data = await fetchRanking(page_number);
+
         const playerArray: OsuPlayer[] = data.ranking.map((rankEntry: any) => ({
             user_id: rankEntry.user.id,
             username: rankEntry.user.username,
@@ -54,7 +55,7 @@ async function processPlayers(page_number: string) {
             playerArray
         );
 
-        // Fetch user data in parallel for better performance
+        // Fetch user data in parallel
         const badgePromises = playerArray.map(async (player) => {
             try {
                 const userData = await fetchUser(player.username);
@@ -69,6 +70,11 @@ async function processPlayers(page_number: string) {
         await Promise.all(badgePromises);
 
         console.log("Updated players with badge counts:", playerArray);
+
+        // Insert players to database
+        await insertPlayersToDb(playerArray);
+
+        console.log("All players inserted into the database");
     } catch (error) {
         console.error("Error in processPlayers:", error);
     }
@@ -76,50 +82,78 @@ async function processPlayers(page_number: string) {
 
 processPlayers("1");
 
-const insertPlayersToDb = (playerList: OsuPlayer): Promise<void> => {
-    return new Promise((resolve) => {
-        db.get(
-            "SELECT * FROM osu_players WHERE user_id = ?",
-            [playerList.user_id],
-            (err, row) => {
-                if (err) {
-                    console.error("Error checking existing players: ", err);
-                    resolve();
-                    return;
-                }
+const insertPlayersToDb = async (playerList: OsuPlayer[]): Promise<void> => {
+    return new Promise<void>((resolve, reject) => {
+        const stmt = db.prepare(
+            "INSERT INTO osu_players (user_id, username, pp, rank, country, badges) VALUES (?, ?, ?, ?, ?, ?)"
+        );
 
-                if (row) {
-                    console.log(
-                        `Player with user_id ${playerList.user_id} already exists, skipping insertion.`
-                    );
-                    resolve();
-                } else {
-                    db.run(
-                        "INSERT INTO osu_players (user_id, username, pp, rank, country, badges) VALUES (?, ?, ?, ?, ?, ?)",
-                        [
-                            playerList.user_id,
-                            playerList.username,
-                            playerList.pp,
-                            playerList.rank,
-                            playerList.country,
-                            playerList.badges,
-                        ],
-                        (insertErr) => {
-                            if (insertErr) {
+        const insertPromises = playerList.map(
+            (player) =>
+                new Promise<void>((resolveInsert, rejectInsert) => {
+                    db.get(
+                        "SELECT * FROM osu_players WHERE user_id = ?",
+                        [player.user_id],
+                        (err: Error | null, row: any) => {
+                            if (err) {
                                 console.error(
-                                    "Error inserting player: ",
-                                    insertErr
+                                    "Error checking existing players:",
+                                    err
                                 );
-                            } else {
+                                rejectInsert(err);
+                                return;
+                            }
+
+                            if (row) {
                                 console.log(
-                                    `Inserted player ${playerList.username}(user_id: ${playerList.user_id}) `
+                                    `Player with user_id ${player.user_id} already exists, skipping.`
+                                );
+                                resolveInsert();
+                            } else {
+                                stmt.run(
+                                    player.user_id,
+                                    player.username,
+                                    player.pp,
+                                    player.rank,
+                                    player.country,
+                                    player.badges,
+                                    (insertErr: Error | null) => {
+                                        if (insertErr) {
+                                            console.error(
+                                                "Error inserting player:",
+                                                insertErr
+                                            );
+                                            rejectInsert(insertErr);
+                                        } else {
+                                            console.log(
+                                                `Inserted player ${player.username} (user_id: ${player.user_id})`
+                                            );
+                                            resolveInsert();
+                                        }
+                                    }
                                 );
                             }
-                            resolve();
                         }
                     );
-                }
-            }
+                })
         );
+
+        // Wait for all inserts to finish, then finalize statement
+        Promise.all(insertPromises)
+            .then(() => {
+                stmt.finalize((finalizeErr) => {
+                    if (finalizeErr) {
+                        console.error(
+                            "Error finalizing statement:",
+                            finalizeErr
+                        );
+                        reject(finalizeErr);
+                    } else {
+                        console.log("All players processed.");
+                        resolve();
+                    }
+                });
+            })
+            .catch(reject);
     });
 };

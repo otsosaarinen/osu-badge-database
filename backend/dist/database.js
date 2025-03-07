@@ -47,7 +47,7 @@ function processPlayers(page_number) {
                 badges: null,
             }));
             console.log(`Fetched ranking data for page ${page_number}: `, playerArray);
-            // Fetch user data in parallel for better performance
+            // Fetch user data in parallel
             const badgePromises = playerArray.map((player) => __awaiter(this, void 0, void 0, function* () {
                 try {
                     const userData = yield fetchUser(player.username);
@@ -61,6 +61,9 @@ function processPlayers(page_number) {
             // Wait for all badge updates to complete
             yield Promise.all(badgePromises);
             console.log("Updated players with badge counts:", playerArray);
+            // Insert players to database
+            yield insertPlayersToDb(playerArray);
+            console.log("All players inserted into the database");
         }
         catch (error) {
             console.error("Error in processPlayers:", error);
@@ -68,36 +71,48 @@ function processPlayers(page_number) {
     });
 }
 processPlayers("1");
-const insertPlayersToDb = (playerList) => {
-    return new Promise((resolve) => {
-        db.get("SELECT * FROM osu_players WHERE user_id = ?", [playerList.user_id], (err, row) => {
-            if (err) {
-                console.error("Error checking existing players: ", err);
-                resolve();
-                return;
-            }
-            if (row) {
-                console.log(`Player with user_id ${playerList.user_id} already exists, skipping insertion.`);
-                resolve();
-            }
-            else {
-                db.run("INSERT INTO osu_players (user_id, username, pp, rank, country, badges) VALUES (?, ?, ?, ?, ?, ?)", [
-                    playerList.user_id,
-                    playerList.username,
-                    playerList.pp,
-                    playerList.rank,
-                    playerList.country,
-                    playerList.badges,
-                ], (insertErr) => {
-                    if (insertErr) {
-                        console.error("Error inserting player: ", insertErr);
-                    }
-                    else {
-                        console.log(`Inserted player ${playerList.username}(user_id: ${playerList.user_id}) `);
-                    }
+const insertPlayersToDb = (playerList) => __awaiter(void 0, void 0, void 0, function* () {
+    return new Promise((resolve, reject) => {
+        const stmt = db.prepare("INSERT INTO osu_players (user_id, username, pp, rank, country, badges) VALUES (?, ?, ?, ?, ?, ?)");
+        const insertPromises = playerList.map((player) => new Promise((resolveInsert, rejectInsert) => {
+            db.get("SELECT * FROM osu_players WHERE user_id = ?", [player.user_id], (err, row) => {
+                if (err) {
+                    console.error("Error checking existing players:", err);
+                    rejectInsert(err);
+                    return;
+                }
+                if (row) {
+                    console.log(`Player with user_id ${player.user_id} already exists, skipping.`);
+                    resolveInsert();
+                }
+                else {
+                    stmt.run(player.user_id, player.username, player.pp, player.rank, player.country, player.badges, (insertErr) => {
+                        if (insertErr) {
+                            console.error("Error inserting player:", insertErr);
+                            rejectInsert(insertErr);
+                        }
+                        else {
+                            console.log(`Inserted player ${player.username} (user_id: ${player.user_id})`);
+                            resolveInsert();
+                        }
+                    });
+                }
+            });
+        }));
+        // Wait for all inserts to finish, then finalize statement
+        Promise.all(insertPromises)
+            .then(() => {
+            stmt.finalize((finalizeErr) => {
+                if (finalizeErr) {
+                    console.error("Error finalizing statement:", finalizeErr);
+                    reject(finalizeErr);
+                }
+                else {
+                    console.log("All players processed.");
                     resolve();
-                });
-            }
-        });
+                }
+            });
+        })
+            .catch(reject);
     });
-};
+});
