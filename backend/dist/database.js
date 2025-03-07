@@ -26,10 +26,10 @@ db.serialize(() => {
         ID INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL UNIQUE,
         username STRING NOT NULL,
-        badges INTEGER,
-        rank INTEGER,
         pp REAL,
-        country STRING
+        rank INTEGER,
+        country STRING,
+        badges INTEGER
         )
     `);
 });
@@ -41,16 +41,16 @@ function processPlayers(page_number) {
             const playerArray = data.ranking.map((rankEntry) => ({
                 user_id: rankEntry.user.id,
                 username: rankEntry.user.username,
-                rank: rankEntry.global_rank,
                 pp: rankEntry.pp,
-                badges: null, // Will update later
+                rank: rankEntry.global_rank,
                 country: rankEntry.user.country_code,
+                badges: null,
             }));
-            console.log("Fetched ranking data:", playerArray);
+            console.log(`Fetched ranking data for page ${page_number}: `, playerArray);
             // Fetch user data in parallel for better performance
             const badgePromises = playerArray.map((player) => __awaiter(this, void 0, void 0, function* () {
                 try {
-                    const userData = yield fetchUser(player.username); // Use username as intended
+                    const userData = yield fetchUser(player.username);
                     player.badges = userData.badges ? userData.badges.length : 0;
                 }
                 catch (error) {
@@ -81,13 +81,13 @@ const insertPlayersToDb = (playerList) => {
                 resolve();
             }
             else {
-                db.run("INSERT INTO osu_players (user_id, username, badges, rank, pp, country) VALUES (?, ?, ?, ?, ?)", [
+                db.run("INSERT INTO osu_players (user_id, username, pp, rank, country, badges) VALUES (?, ?, ?, ?, ?, ?)", [
                     playerList.user_id,
                     playerList.username,
-                    playerList.rank,
                     playerList.pp,
-                    playerList.badges,
+                    playerList.rank,
                     playerList.country,
+                    playerList.badges,
                 ], (insertErr) => {
                     if (insertErr) {
                         console.error("Error inserting player: ", insertErr);
